@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pruebas API Inmobiliaria</title>
+</head>
+<body style="font-family: Arial; padding: 20px;">
+    <h1>🔧 Pruebas API Inmobiliaria</h1>
+    
+    <div style="background: #e3f2fd; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <strong>URL Backend:</strong> http://localhost:4000<br>
+        <strong>Estado:</strong> <span style="color: green;">✅ Funcionando</span>
+    </div>
+    
+    <h2>1. Login (POST necesario)</h2>
+    <button onclick="login('admin')">Login Admin</button>
+    <button onclick="login('vendedor')">Login Vendedor</button>
+    
+    <h2>2. Buscar dirección en mapa (POST)</h2>
+    <input id="direccion" value="Buenos Aires" placeholder="Dirección">
+    <button onclick="geocode()">Buscar en Mapa</button>
+    
+    <h2>3. Propiedades (GET - ya funciona)</h2>
+    <button onclick="propiedades()">Ver Todas</button>
+    <button onclick="propiedadDetalle()">Ver Detalle ID:1</button>
+    
+    <h2>4. Reverse Geocode (Coordenadas → Dirección)</h2>
+    <button onclick="reverseGeocode()">Probar con Buenos Aires</button>
+    
+    <div id="resultado" style="margin-top: 20px; padding: 15px; background: #f5f5f5; border-radius: 5px; min-height: 100px;">
+        Resultados aparecerán aquí...
+    </div>
+    
+    <script>
+        const API_URL = 'http://localhost:4000';
+        
+        async function login(tipo) {
+            const usuarios = {
+                admin: { email: 'admin@inmo.com', password: 'admin123' },
+                vendedor: { email: 'vendedor@inmo.com', password: 'admin123' }
+            };
+            
+            mostrar('⌛ Login en progreso...');
+            
+            try {
+                const res = await fetch(`${API_URL}/api/usuarios/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(usuarios[tipo])
+                });
+                const data = await res.json();
+                mostrar(`✅ Login ${tipo}:`, data);
+            } catch (error) {
+                mostrar('❌ Error:', error.message);
+            }
+        }
+        
+        async function geocode() {
+            const direccion = document.getElementById('direccion').value;
+            mostrar('⌛ Buscando coordenadas...');
+            
+            try {
+                const res = await fetch(`${API_URL}/api/geocode/mapbox`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ direccion })
+                });
+                const data = await res.json();
+                mostrar('📍 Geocode resultado:', data);
+            } catch (error) {
+                mostrar('❌ Error:', error.message);
+            }
+        }
+        
+        async function propiedades() {
+            try {
+                const res = await fetch(`${API_URL}/api/propiedades`);
+                const data = await res.json();
+                mostrar('🏠 Propiedades:', data);
+            } catch (error) {
+                mostrar('❌ Error:', error.message);
+            }
+        }
+        
+        async function propiedadDetalle() {
+            try {
+                const res = await fetch(`${API_URL}/api/propiedades/1`);
+                const data = await res.json();
+                mostrar('🏠 Detalle Propiedad ID:1', data);
+            } catch (error) {
+                mostrar('❌ Error:', error.message);
+            }
+        }
+        
+        async function reverseGeocode() {
+            mostrar('⌛ Convirtiendo coordenadas a dirección...');
+            try {
+                const res = await fetch(`${API_URL}/api/reverse-geocode`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        latitud: -34.6037, 
+                        longitud: -58.3816 
+                    })
+                });
+                const data = await res.json();
+                mostrar('🔄 Reverse Geocode:', data);
+            } catch (error) {
+                mostrar('❌ Error:', error.message);
+            }
+        }
+        
+        function mostrar(titulo, data) {
+            const resultado = document.getElementById('resultado');
+            resultado.innerHTML = `<h3>${titulo}</h3><pre style="background: white; padding: 10px; border-radius: 3px;">${JSON.stringify(data, null, 2)}</pre>`;
+        }
+    </script>
+</body>
+</html>
